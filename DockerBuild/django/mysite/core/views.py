@@ -8,6 +8,8 @@ from .models import Book
 import os
 import re
 import subprocess
+from django.core.files.base import ContentFile
+
 class Home(TemplateView):
     template_name = 'home.html'
 
@@ -20,24 +22,47 @@ def upload(request):
         name = fs.save(uploaded_file.name, uploaded_file)
         context['url'] = fs.url(name)
         context['result']=str(name)
+
+    fs = FileSystemStorage()
+    fs.save("1234222.txt",ContentFile('new content'))
     return render(request, 'upload.html', context)
 
 
 def book_list(request):
     books = Book.objects.all()
+    #c=Book.objects.filter(title='e')
+    #print(c[0].pdf)
+    #print(c[0].title)
+    #print(c[0].author)
     return render(request, 'book_list.html', {
         'books': books
     })
 
 
 def upload_book(request):
+
+    
+
     if request.method == 'POST':
-        form = BookForm(request.POST, request.FILES)
+
+        data = request.POST.copy()
+        #print(request.build_absolute_uri())
+        #print(request.get_current().domain)
+
+        data['test'] ='http://127.0.0.1:8787/media/books/pdfs2/1234.txt'
+
+
+        form = BookForm(data, request.FILES)
+        
+        
         if form.is_valid():
+            #print(form.cleaned_data.get('title'))
+            #subprocess.run(["touch", "/tmp/dslfjsdlfkjslkfjd"])
             form.save()
             return redirect('book_list')
     else:
         form = BookForm()
+
     return render(request, 'upload_book.html', {
         'form': form
     })
